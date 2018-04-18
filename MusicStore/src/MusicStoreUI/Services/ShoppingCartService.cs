@@ -8,61 +8,62 @@ using Steeltoe.Common.Discovery;
 
 namespace MusicStoreUI.Services
 {
-    public class ShoppingCartService : BaseDiscoveryService, IShoppingCart
+    public class ShoppingCartService : IShoppingCart
     {
-        private const string SHOPPINGCART_URL = "http://shoppingcart/api/ShoppingCart/{cartId}";
-        private const string SHOPPINGCART_ITEM_URL ="http://shoppingcart/api/ShoppingCart/{cartId}/Item/{itemId}";
+        private const string SHOPPINGCART_URL = "{cartId}";
+        private const string SHOPPINGCART_ITEM_URL ="{cartId}/Item/{itemId}";
 
-        public ShoppingCartService(IDiscoveryClient client, ILoggerFactory logFactory) :
-            base(client, logFactory.CreateLogger<ShoppingCartService>())
+        private readonly HttpClient _httpClient;
+
+        public ShoppingCartService(HttpClient httpClient)
         {
+            _httpClient = httpClient;
         }
 
         public async Task<bool> EmptyCartAsync(string cartId)
         {
-            var cartUrl = SHOPPINGCART_URL.Replace("{cartId}", cartId);
+            var url = SHOPPINGCART_URL.Replace("{cartId}", cartId);
+            var response = await _httpClient.DeleteAsync(url);
+            response.EnsureSuccessStatusCode();
 
-            var request = new HttpRequestMessage(HttpMethod.Delete, cartUrl);
-            var result = await Invoke(request);
-            return result;
+            return true;
         }
 
         public async Task<List<CartItem>> GetCartItemsAsync(string cartId)
         {
-            var cartUrl = SHOPPINGCART_URL.Replace("{cartId}", cartId);
+            var url = SHOPPINGCART_URL.Replace("{cartId}", cartId);
+            var response = await _httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
 
-            var request = new HttpRequestMessage(HttpMethod.Get, cartUrl);
-            var cartResult = await Invoke<List<CartItemJson>>(request);
-
-            var result = CartItem.From(cartResult);
+            var result = CartItem.From(await response.Content.ReadAsAsync<List<CartItemJson>>());
             return result;
         }
 
         public async Task<bool> RemoveItemAsync(string cartId, int itemKey)
         {
-            var cartUrl = SHOPPINGCART_ITEM_URL.Replace("{cartId}", cartId).Replace("{itemId}", itemKey.ToString());
+            var url = SHOPPINGCART_ITEM_URL.Replace("{cartId}", cartId).Replace("{itemId}", itemKey.ToString());
+            var response = await _httpClient.DeleteAsync(url);
+            response.EnsureSuccessStatusCode();
 
-            var request = new HttpRequestMessage(HttpMethod.Delete, cartUrl);
-            var result = await Invoke(request);
-            return result;
+            return true;
         }
 
         public async Task<bool> AddItemAsync(string cartId, int itemKey)
         {
-            var cartUrl = SHOPPINGCART_ITEM_URL.Replace("{cartId}", cartId).Replace("{itemId}", itemKey.ToString());
+            var url = SHOPPINGCART_ITEM_URL.Replace("{cartId}", cartId).Replace("{itemId}", itemKey.ToString());
+            var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, url));
+            response.EnsureSuccessStatusCode();
 
-            var request = new HttpRequestMessage(HttpMethod.Put, cartUrl);
-            var result = await Invoke(request);
-            return result;
+            return true;
         }
 
         public async Task<bool> CreateCartAsync(string cartId)
         {
-            var cartUrl = SHOPPINGCART_URL.Replace("{cartId}", cartId);
-
-            var request = new HttpRequestMessage(HttpMethod.Put, cartUrl);
-            var result = await Invoke(request);
-            return result;
+            var url = SHOPPINGCART_URL.Replace("{cartId}", cartId);
+            var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, url));
+            response.EnsureSuccessStatusCode();
+            
+            return true;
         }
     }
 }

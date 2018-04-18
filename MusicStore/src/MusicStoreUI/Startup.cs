@@ -1,4 +1,5 @@
-﻿using MusicStoreUI.Services;
+﻿using System;
+using MusicStoreUI.Services;
 using MusicStoreUI.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Logging;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Pivotal.Discovery.Client;
+using Polly;
 
 #if USE_REDIS_CACHE
 using Microsoft.AspNetCore.DataProtection;
@@ -14,6 +16,7 @@ using Steeltoe.CloudFoundry.Connector.Redis;
 using Steeltoe.Security.DataProtection;
 #endif
 
+using Steeltoe.Common.Discovery;
 using Steeltoe.CloudFoundry.Connector.MySql.EFCore;
 using Steeltoe.Management.Endpoint.Health;
 using Steeltoe.Management.CloudFoundry;
@@ -62,16 +65,36 @@ namespace MusicStoreUI
 
             services.AddDiscoveryClient(Configuration);
 
-            services.AddSingleton<IMusicStore, MusicStoreService>();
-            services.AddSingleton<IShoppingCart, ShoppingCartService>();
-            services.AddSingleton<IOrderProcessing, OrderProcessingService>();
-
             services.AddHystrixCommand<Command.GetTopAlbums>("MusicStore", Configuration);
             services.AddHystrixCommand<Command.GetGenres>("MusicStore", Configuration);
             services.AddHystrixCommand<Command.GetGenre>("MusicStore", Configuration);
             services.AddHystrixCommand<Command.GetAlbum>("MusicStore", Configuration);
 
-            services.AddMvc();
+            services.AddTransient<DiscoveryHttpMessageHandler>();
+
+            services.AddHttpClient("store", c =>
+            {
+                c.BaseAddress = new Uri("http://musicstore/api/Store/");
+            })
+            .AddHttpMessageHandler<DiscoveryHttpMessageHandler>()
+            .AddTypedClient<IMusicStore, MusicStoreService>();
+
+            services.AddHttpClient("orders", c =>
+            {
+                c.BaseAddress = new Uri("http://orderprocessing/api/Order/");
+            })
+            .AddHttpMessageHandler<DiscoveryHttpMessageHandler>()
+            .AddTypedClient<IOrderProcessing, OrderProcessingService>();
+
+            services.AddHttpClient("cart", c =>
+            {
+                c.BaseAddress = new Uri("http://shoppingcart/api/ShoppingCart/");
+            })
+            .AddHttpMessageHandler<DiscoveryHttpMessageHandler>()
+            .AddTypedClient<IShoppingCart, ShoppingCartService>();
+
+            services.AddMvc()
+                    .SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_2_1);
 
             // Add memory cache services
             services.AddMemoryCache();
