@@ -9,31 +9,30 @@ using Steeltoe.Common.Discovery;
 
 namespace MusicStoreUI.Services
 {
-    public class OrderProcessingService : BaseDiscoveryService, IOrderProcessing
+    public class OrderProcessingService : IOrderProcessing
     {
-        private const string ORDER_URL = "http://orderprocessing/api/Order";
+        private const string ORDER_URL = "/";
 
-        public OrderProcessingService(IDiscoveryClient client, ILoggerFactory logFactory) : base(client, logFactory.CreateLogger<OrderProcessingService>())
+        private readonly HttpClient _httpClient;
+
+        public OrderProcessingService(HttpClient httpClient)
         {
+            _httpClient = httpClient;
         }
 
         public async Task<int> AddOrderAsync(Order order)
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, ORDER_URL);
-            var result = await Invoke<OrderJson>(request, OrderJson.From(order));
+            var response = await _httpClient.PostAsJsonAsync(ORDER_URL, OrderJson.From(order));
+            var result = await response.Content.ReadAsAsync<OrderJson>();
             return result.OrderId;
         }
 
         public async Task<Order> GetOrderAsync(int id)
         {
-            var orderUrl = ORDER_URL + "?id=" + id;
+            var response = await _httpClient.GetAsync($"{ORDER_URL}?id={id}");
+            var result = Order.From(await response.Content.ReadAsAsync<OrderJson>());
 
-            var request = new HttpRequestMessage(HttpMethod.Get, orderUrl);
-            var orderResult = await Invoke<OrderJson>(request);
-
-            var result = Order.From(orderResult);
-
-            foreach(var detail in result.OrderDetails)
+            foreach (var detail in result.OrderDetails)
             {
                 detail.Order = result;
             }

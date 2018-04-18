@@ -1,4 +1,5 @@
-﻿using MusicStoreUI.Services;
+﻿using System;
+using MusicStoreUI.Services;
 using MusicStoreUI.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ using Steeltoe.CloudFoundry.Connector.Redis;
 using Steeltoe.Security.DataProtection;
 #endif
 
+using Steeltoe.Common.Discovery;
 using Steeltoe.CloudFoundry.Connector.MySql.EFCore;
 using Steeltoe.Management.Endpoint.Health;
 using Steeltoe.Management.CloudFoundry;
@@ -71,6 +73,27 @@ namespace MusicStoreUI
             services.AddHystrixCommand<Command.GetGenre>("MusicStore", Configuration);
             services.AddHystrixCommand<Command.GetAlbum>("MusicStore", Configuration);
 
+            services.AddHttpClient("store", c =>
+            {
+                c.BaseAddress = new Uri("http://musicstore/api/Store/");
+            })
+            .ConfigurePrimaryHttpMessageHandler<DiscoveryHttpClientHandler>()
+            .AddTypedClient<IMusicStore, MusicStoreService>();
+
+            services.AddHttpClient("orders", c =>
+            {
+                c.BaseAddress = new Uri("http://orderprocessing/api/Order/");
+            })
+            .ConfigurePrimaryHttpMessageHandler<DiscoveryHttpClientHandler>()
+            .AddTypedClient<IOrderProcessing, OrderProcessingService>();
+
+            services.AddHttpClient("cart", c =>
+            {
+                c.BaseAddress = new Uri("http://shoppingcart/api/ShoppingCart/");
+            })
+            .ConfigurePrimaryHttpMessageHandler<DiscoveryHttpClientHandler>()
+            .AddTypedClient<IShoppingCart, ShoppingCartService>();
+            
             services.AddMvc();
 
             // Add memory cache services
