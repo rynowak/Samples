@@ -73,6 +73,8 @@ namespace MusicStoreUI
             services.AddHystrixCommand<Command.GetGenre>("MusicStore", Configuration);
             services.AddHystrixCommand<Command.GetAlbum>("MusicStore", Configuration);
 
+            services.AddTransient<DiscoveryHttpClientHandler>();
+
             services.AddHttpClient("store", c =>
             {
                 c.BaseAddress = new Uri("http://musicstore/api/Store/");
@@ -93,8 +95,9 @@ namespace MusicStoreUI
             })
             .ConfigurePrimaryHttpMessageHandler<DiscoveryHttpClientHandler>()
             .AddTypedClient<IShoppingCart, ShoppingCartService>();
-            
-            services.AddMvc();
+
+            services.AddMvc()
+                    .SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_2_1);
 
             // Add memory cache services
             services.AddMemoryCache();

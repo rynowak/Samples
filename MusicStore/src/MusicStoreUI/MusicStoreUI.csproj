@@ -1,8 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
-    <RuntimeIdentifiers>win10-x64;osx.10.11-x64;ubuntu.14.04-x64</RuntimeIdentifiers>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <DefineConstants>$(DefineConstants);DEMO;TESTING</DefineConstants>
   </PropertyGroup>
 
@@ -21,7 +20,7 @@
 
   <ItemGroup>
     <!-- GitInfo provides $(Git*) properties used below -->
-    <PackageReference Include="GitInfo" Version="2.0.6" /> 
+    <!--<PackageReference Include="GitInfo" Version="2.0.6" />--> 
     <PackageReference Include="Microsoft.AspNet.WebAPI.Client" Version="5.2.5-preview1" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.1.0-preview2-final" />
     <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="2.1.0-preview2-final" />
@@ -49,7 +48,7 @@
   </ItemGroup>
 
 
-  <Target Name="_GitProperties" AfterTargets="CoreCompile">
+  <!--<Target Name="_GitProperties" AfterTargets="CoreCompile">
     <WriteLinesToFile File="git.properties" Lines="git.remote.origin.url=$(GitRoot)" Overwrite="true" />
     <WriteLinesToFile File="git.properties" Lines="git.build.version=$(GitBaseVersion)" Overwrite="false" />
     <WriteLinesToFile File="git.properties" Lines="git.commit.id.abbrev=$(GitCommit)" Overwrite="false" />
@@ -59,6 +58,6 @@
     <WriteLinesToFile File="git.properties" Lines="git.build.time=$([System.DateTime]::Now.ToString('O'))" Overwrite="false" />
     <WriteLinesToFile File="git.properties" Lines="git.build.user.name=$([System.Environment]::GetEnvironmentVariable('USERNAME'))" Overwrite="false" />
     <WriteLinesToFile File="git.properties" Lines="git.build.host=$([System.Environment]::GetEnvironmentVariable('COMPUTERNAME'))" Overwrite="false" />
-  </Target>
+  </Target>-->
 
 </Project>
