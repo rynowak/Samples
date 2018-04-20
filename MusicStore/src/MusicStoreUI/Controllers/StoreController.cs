@@ -33,17 +33,9 @@ namespace MusicStoreUI.Controllers
         // GET: /Store/Browse?genre=Disco
         public async Task<IActionResult> Browse(
             [FromServices] Services.HystrixCommands.GetGenre genreCommand,
-            string genre
-            )
+            string genre)
         {
-    
             var genreModel = await genreCommand.GetGenreAsync(genre);
-
-            if (genreModel == null)
-            {
-                return NotFound();
-            }
-
             return View(genreModel);
         }
 
