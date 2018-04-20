@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MusicStore.Models;
+using MusicStoreService;
 using Pivotal.Discovery.Client;
 using Steeltoe.CloudFoundry.Connector.MySql.EFCore;
 using Steeltoe.Management.CloudFoundry;
@@ -38,6 +39,8 @@ namespace MusicStore
             // Steeltoe MySQL Connector
             services.AddDbContext<MusicStoreContext>(options => options.UseMySql(Configuration));
 
+            services.Configure<ResiliencyOptions>(Configuration);
+
             // Add Framework services
             services.AddMvc();
         }
@@ -48,6 +51,8 @@ namespace MusicStore
  
             // Add Steeltoe Management endpoints into pipeline
             app.UseCloudFoundryActuators();
+
+            app.UseMiddleware<ResiliencyMiddleware>();
 
             app.UseMvc(routes =>
             {
